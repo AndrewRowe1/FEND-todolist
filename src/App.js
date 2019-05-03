@@ -4,6 +4,7 @@ import "./App.css";
 class App extends Component {
   state = {
     tasks: ["sleep", "make fend flapjacks"],
+    category: ["unproductive", "productive"],
     display: true
   };
 
@@ -12,27 +13,30 @@ class App extends Component {
       <div className="App">
         < Title />
         {this.state.display ?
-          <p addSum={this.addSum}>{2} + {3} = {this.addSum(2, 3)}</p>
+          <p addsum={this.addsum}>{2} + {3} = {this.addsum(2, 3)}</p>
           : <p>Sum not here</p>
         }
-        <TaskAdder addTask={this.addTask} />
-        <List tasks={this.state.tasks} removeTask={this.removeTask} />
+        <TaskCatAdder addTask={this.addTask} addCategory={this.addCategory} />
+        <ListTask tasks={this.state.tasks} removeTask={this.removeTask} category={this.state.category} removeCategory={this.removeCategory} />
       </div>
     );
   }
 
-  addSum = (num1, num2) => {
+  addsum = (num1, num2) => {
     return num1 + num2;
   }
 
   removeTask = taskToDelete => {
-    //no-no - this is MUTATION :(
-    // this.state.tasks = this.state.tasks.filter(task => task !== taskToDelete)
-
-    //yes-yes - this is avoids mutation and is best practice
     this.setState(prevState => {
       const newTasks = prevState.tasks.filter(task => task !== taskToDelete);
       return { tasks: newTasks };
+    });
+  };
+
+  removeCategory = categoryToDelete => {
+    this.setState(prevState => {
+      const newCategory = prevState.category.filter(category => category !== categoryToDelete);
+      return { category: newCategory };
     });
   };
 
@@ -45,52 +49,97 @@ class App extends Component {
       };
     });
   };
+
+  addCategory = categoryToAdd => {
+    this.setState(prevState => {
+      const newArray = [...prevState.category, categoryToAdd];
+      return {
+        category: newArray
+      };
+    });
+  };
 }
 
 function Title () {
   return <h1 id="heading">My to-do list</h1>;
 }
 
-class TaskAdder extends Component {
+class TaskCatAdder extends Component {
   state = {
-    input: ""
+    task_input: "",
+    category_input: ""
   };
+
+  validateForm = () => {
+    return this.state.task_input && this.state.category_input;
+  }
 
   render () {
     return (
       <form onSubmit={this.handleSubmit}>
-        <input
+        <div>Task input: <input
           onChange={this.handleTyping}
           type="text"
-          value={this.state.input}
-        />
+          value={this.state.task_input}
+          name='task_input' />
+          Category input: <input
+            onChange={this.handleTyping}
+            type="text"
+            value={this.state.category_input}
+            name='category_input'
+          />
+        </div>
+        <button disabled={!this.validateForm()}
+          type="submit">
+          Add Task / Category
+        </button>
       </form>
     );
   }
 
   handleTyping = changeEvent => {
     const userInput = changeEvent.target.value;
-    this.setState({ input: userInput });
+    this.setState({ [changeEvent.target.name]: userInput });
   };
 
   handleSubmit = event => {
     event.preventDefault();
-    this.props.addTask(this.state.input);
-    this.setState({ input: "" });
+    this.props.addTask(this.state.task_input);
+    this.props.addCategory(this.state.category_input);
+    this.setState({ task_input: "", category_input: "" });
   };
 }
 
-function List (props) {
+function ListTask (props) {
   return (
-    <ul>
-      {props.tasks.map(task => {
-        return (
-          <li onClick={event => props.removeTask(task)} key={task}>
-            {task}
-          </li>
-        );
-      })}
-    </ul>
+    <div>
+      <table >
+        <tr>
+          <th>Task</th>
+          <th>Category</th>
+        </tr>
+        <tr>
+          <td>
+            {props.tasks.map(task => {
+              return (
+                <li onClick={event => props.removeTask(task)} key={task}>
+                  {task}
+                </li>
+              );
+            })}
+          </td>
+          <td>
+            {props.category.map(category => {
+              return (
+                <li onClick={event => props.removeCategory(category)} key={category}>
+                  {category}
+                </li>
+              );
+            })}
+          </td>
+        </tr>
+      </table>
+    </div>
   );
 }
 
